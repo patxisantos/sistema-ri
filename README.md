@@ -83,22 +83,84 @@ pip install fastapi uvicorn nltk tqdm psutil pydantic
 python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
 ```
 
-### 3. Descargar Datos
+### 3. Descargar y Configurar Datos
+
+> ⚠️ **IMPORTANTE**: Este paso es crucial para el funcionamiento del sistema.
+
+#### 3.1. Acceder a Google Drive
 
 El corpus y el índice pre-construido están disponibles en Google Drive:
 
 🔗 **[Descargar datos desde Google Drive](https://drive.google.com/drive/folders/1EDmw6QCi_2zTBF6jwhnnzEr6M3V3mkS1?usp=sharing)**
 
-Descarga y extrae los archivos en la carpeta:
+**Estructura en Google Drive:**
+```
+📁 Sistema RI - Datos/
+├── 📦 corpus.zip          (~10.4 GB comprimido - ~28,000 documentos JSON)
+└── 📁 index/
+    ├── index.pkl           (~2.4 GB)
+    ├── index_metadata.json (~100 MB)
+    └── idf.json            (~50 MB)
+```
+
+#### 3.2. Crear estructura de carpetas
+
+Dentro del directorio `backend`, crea la carpeta `data` con las subcarpetas necesarias:
+
+```bash
+cd backend
+mkdir data
+mkdir data\corpus
+mkdir data\index
+```
+
+#### 3.3. Descargar y extraer corpus
+
+1. Descarga **corpus.zip** desde Google Drive (~10.4 GB)
+2. **Descomprime el archivo ZIP**
+3. **Copia TODOS los archivos JSON descomprimidos** a `backend/data/corpus/`
+
+> ⚠️ Los archivos JSON deben estar **directamente** en `data/corpus/`, no dentro de subcarpetas.
+
+#### 3.4. Descargar índice pre-construido
+
+1. Descarga la carpeta **index/** desde Google Drive
+2. Copia los **tres archivos** a `backend/data/index/`:
+   - `index.pkl`
+   - `index_metadata.json`
+   - `idf.json`
+
+#### 3.5. Verificar estructura final
+
+La estructura debe quedar así:
 
 ```
-    ├── corpus/          # Documentos del corpus (~10GB)
-    │   └── *.json (archivos de documentos, previamente TXT)
-    └── index/           # Índice pre-construido
-        └── index.pkl
+backend/
+├── main.py
+├── search_engine.py
+├── ...
+└── data/                    ← CREAR
+    ├── corpus/              ← CREAR
+    │   ├── download_metadata.json
+    │   ├── gutenberg_1_1767745768573496.json
+    │   ├── gutenberg_100_1767745769619108.json
+    │   └── ... (~28,000 archivos JSON más)
+    └── index/               ← CREAR
+        ├── index.pkl
+        ├── index_metadata.json
+        └── idf.json
 ```
 
-> **Nota**: Si prefieres construir el índice desde cero, omite la carpeta `index/` y ejecuta `POST /api/index/build` (proceso de ~40 minutos).
+Verificar con:
+```bash
+# Desde backend/
+dir data\corpus    # Debe mostrar ~28,000 archivos .json
+dir data\index     # Debe mostrar 3 archivos
+```
+
+> 📖 **Instrucciones detalladas**: Ver [backend/README.md](backend/README.md) para más información.
+>
+> 🔨 **Construir índice desde cero**: Si prefieres no descargar el índice, solo descarga el corpus y ejecuta `POST /api/index/build` (⚠️ ~40 minutos, requiere recursos significativos).
 
 ### 4. Configurar Frontend
 
@@ -165,7 +227,7 @@ Respuesta:
 }
 ```
 
-## Estructura del Proyecto
+## Estructura del Proyecto (una vez instalado correctamente)
 
 ```
 sistema-ri/
