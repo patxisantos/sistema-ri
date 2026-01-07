@@ -12,11 +12,6 @@ function App() {
   const [topK, setTopK] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const resultsPerPage = 10;
-  
-  // Estado para métricas de evaluación
-  const [metrics, setMetrics] = useState(null);
-  const [loadingMetrics, setLoadingMetrics] = useState(false);
-  const [showMetrics, setShowMetrics] = useState(false);
 
   // Cargar estadísticas del índice al iniciar
   useEffect(() => {
@@ -75,24 +70,6 @@ function App() {
       console.error('Error:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Función para cargar métricas de evaluación
-  const handleLoadMetrics = async () => {
-    setLoadingMetrics(true);
-    try {
-      const response = await fetch('http://localhost:8000/api/evaluate');
-      const data = await response.json();
-      if (data.status === 'success') {
-        setMetrics(data.metrics);
-        setShowMetrics(true);
-      }
-    } catch (err) {
-      console.error('Error fetching metrics:', err);
-      setError('Error cargando métricas de evaluación');
-    } finally {
-      setLoadingMetrics(false);
     }
   };
 
@@ -229,55 +206,6 @@ function App() {
               </div>
             </div>
           </form>
-        </section>
-
-        {/* SECCIÓN DE MÉTRICAS DE EVALUACIÓN */}
-        <section className="metrics-section">
-          <div className="metrics-header">
-            <h3>EVALUACIÓN DEL SISTEMA</h3>
-            <button 
-              onClick={handleLoadMetrics}
-              className="metrics-button"
-              disabled={loadingMetrics}
-            >
-              {loadingMetrics ? 'Calculando...' : (metrics ? 'Actualizar Métricas' : 'Calcular Métricas')}
-            </button>
-          </div>
-          
-          {showMetrics && metrics && (
-            <div className="metrics-grid">
-              <div className="metric-card">
-                <span className="metric-label">MAP</span>
-                <span className="metric-value">{(metrics.MAP * 100).toFixed(2)}%</span>
-                <span className="metric-desc">Mean Average Precision</span>
-              </div>
-              <div className="metric-card">
-                <span className="metric-label">MRR</span>
-                <span className="metric-value">{(metrics.MRR * 100).toFixed(2)}%</span>
-                <span className="metric-desc">Mean Reciprocal Rank</span>
-              </div>
-              <div className="metric-card">
-                <span className="metric-label">P@5</span>
-                <span className="metric-value">{(metrics['Mean_P@5'] * 100).toFixed(1)}%</span>
-                <span className="metric-desc">Precision at 5</span>
-              </div>
-              <div className="metric-card">
-                <span className="metric-label">P@10</span>
-                <span className="metric-value">{(metrics['Mean_P@10'] * 100).toFixed(1)}%</span>
-                <span className="metric-desc">Precision at 10</span>
-              </div>
-              <div className="metric-card">
-                <span className="metric-label">R@10</span>
-                <span className="metric-value">{(metrics['Mean_R@10'] * 100).toFixed(1)}%</span>
-                <span className="metric-desc">Recall at 10</span>
-              </div>
-              <div className="metric-card">
-                <span className="metric-label">R@20</span>
-                <span className="metric-value">{(metrics['Mean_R@20'] * 100).toFixed(1)}%</span>
-                <span className="metric-desc">Recall at 20</span>
-              </div>
-            </div>
-          )}
         </section>
 
         {/* ERROR MESSAGE */}

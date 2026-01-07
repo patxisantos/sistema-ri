@@ -9,7 +9,7 @@ import time
 from corpus_handler import CorpusHandler
 from indexing import IndexingEngine
 from search_engine import SearchEngine
-from evaluation import evaluate_search_engine, generate_evaluation_report
+from evaluation import evaluate_search_engine, generate_evaluation_report, evaluate_single_query
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -220,6 +220,67 @@ def search(query: str = "", top_k: int = 10):
         raise
     except Exception as e:
         print(f"Error searching: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/search-with-metrics")
+def search_with_metrics(query: str = "", top_k: int = 10):
+    """
+    Realiza búsqueda y calcula métricas de evaluación para la consulta específica.
+    Retorna resultados + Precision@k, Recall@k, AP y RR para ESTA consulta.
+    """
+    global search_engine, indexing_engine
+
+    try:
+        if not query.strip():
+            return {
+                "status": "error",
+                "message": "Query is empty",
+                "results": [],
+                "metrics": {}
+            }
+
+        if search_engine is None or indexing_engine is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Index not loaded. Call POST /api/index/build or check disk for existing index."
+            )
+
+        # Medir tiempo de búsqueda
+        start_time = time.time()
+        results = search_engine.search(query, top_k=top_k)
+        elapsed_time = (time.time() - start_time) * 1000
+
+        # Calcular métricas para esta consulta específica
+        metrics = evaluate_single_query(results, query, k_values=[5, 10, 20])
+
+        print(f"Búsqueda con métricas completada en {elapsed_time:.0f} ms")
+        print(f"   Resultados: {len(results)}, Relevantes: {metrics['relevant_found']}")
+        print(f"   AP: {metrics['average_precision']}, RR: {metrics['reciprocal_rank']}")
+
+        return {
+            "status": "success",
+            "query": query,
+            "results": results,
+            "count": len(results),
+            "elapsed_ms": round(elapsed_time, 2),
+            "metrics": {
+                "precision": metrics["precision"],
+                "recall": metrics["recall"],
+                "average_precision": metrics["average_precision"],
+                "reciprocal_rank": metrics["reciprocal_rank"],
+                "relevant_found": metrics["relevant_found"],
+                "total_results": metrics["total_results"]
+            },
+            "relevance_details": metrics["relevance_details"]
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in search with metrics: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

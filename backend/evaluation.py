@@ -239,6 +239,118 @@ def generate_evaluation_report(metrics, output_path=None):
     return report_text
 
 
+def evaluate_single_query(results, query, k_values=[5, 10, 20]):
+    """
+    Evalúa métricas para una consulta individual basándose en los resultados.
+    
+    Usa heurísticas basadas en:
+    - Score BM25 del resultado
+    - Número de términos coincidentes
+    - Posición en el ranking
+    
+    Args:
+        results: Lista de resultados de búsqueda
+        query: La consulta original
+        k_values: Valores de k para P@k y R@k
+    
+    Returns:
+        dict con métricas calculadas para esta consulta
+    """
+    if not results:
+        return {
+            "precision": {f"P@{k}": 0.0 for k in k_values},
+            "recall": {f"R@{k}": 0.0 for k in k_values},
+            "average_precision": 0.0,
+            "reciprocal_rank": 0.0,
+            "relevant_found": 0,
+            "total_results": 0,
+            "relevance_details": []
+        }
+    
+    # Determinar relevancia usando score y términos coincidentes
+    # Un documento es "relevante" si tiene score > umbral Y coincide con suficientes términos
+    query_terms = query.lower().split()
+    num_query_terms = len(query_terms)
+    
+    relevance_details = []
+    
+    for i, result in enumerate(results):
+        score = result.get('score', 0)
+        matching_terms = result.get('matching_terms_count', 0)
+        
+        # Heurística de relevancia:
+        # - Score alto (>30) con al menos 1 término = muy relevante
+        # - Score medio (15-30) con términos = relevante
+        # - Score bajo (<15) = probablemente no relevante
+        
+        if num_query_terms == 1:
+            # Para consultas de 1 término, basarse principalmente en score
+            is_relevant = score >= 15
+            relevance_score = min(1.0, score / 50)
+        else:
+            # Para consultas multi-término
+            term_ratio = matching_terms / max(1, num_query_terms)
+            score_factor = min(1.0, score / 40)
+            
+            # Combinar factores
+            combined = (term_ratio * 0.4) + (score_factor * 0.6)
+            is_relevant = combined >= 0.35
+            relevance_score = combined
+        
+        relevance_details.append({
+            "position": i + 1,
+            "doc_id": result.get('doc_id', ''),
+            "title": result.get('title', '')[:50],
+            "score": score,
+            "matching_terms": matching_terms,
+            "is_relevant": is_relevant,
+            "relevance_score": round(relevance_score, 3)
+        })
+    
+    # Calcular métricas basadas en relevancia determinada
+    relevant_docs = [r for r in relevance_details if r['is_relevant']]
+    total_relevant = max(len(relevant_docs), 1)  # Evitar división por 0
+    
+    # Precision@k y Recall@k
+    precision_at_k = {}
+    recall_at_k = {}
+    
+    for k in k_values:
+        top_k = relevance_details[:k]
+        relevant_in_k = sum(1 for r in top_k if r['is_relevant'])
+        
+        precision_at_k[f"P@{k}"] = round(relevant_in_k / k, 4) if k > 0 else 0
+        recall_at_k[f"R@{k}"] = round(relevant_in_k / total_relevant, 4)
+    
+    # Average Precision
+    relevant_count = 0
+    precision_sum = 0.0
+    
+    for i, detail in enumerate(relevance_details):
+        if detail['is_relevant']:
+            relevant_count += 1
+            precision_sum += relevant_count / (i + 1)
+    
+    ap = round(precision_sum / relevant_count, 4) if relevant_count > 0 else 0.0
+    
+    # Reciprocal Rank
+    rr = 0.0
+    for i, detail in enumerate(relevance_details):
+        if detail['is_relevant']:
+            rr = round(1.0 / (i + 1), 4)
+            break
+    
+    return {
+        "precision": precision_at_k,
+        "recall": recall_at_k,
+        "average_precision": ap,
+        "reciprocal_rank": rr,
+        "relevant_found": len(relevant_docs),
+        "total_results": len(results),
+        "relevance_details": relevance_details[:10]  # Solo top 10 para no saturar
+    }
+
+
 if __name__ == "__main__":
     # Ejemplo de uso standalone
     print("Este modulo debe importarse desde main.py o usarse con el SearchEngine.")
