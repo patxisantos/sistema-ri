@@ -89,11 +89,9 @@ El corpus y el índice pre-construido están disponibles en Google Drive:
 
 🔗 **[Descargar datos desde Google Drive](https://drive.google.com/drive/folders/1EDmw6QCi_2zTBF6jwhnnzEr6M3V3mkS1?usp=sharing)**
 
-Descarga y extrae los archivos en la carpeta `backend/data/`:
+Descarga y extrae los archivos en la carpeta:
 
 ```
-backend/
-└── data/
     ├── corpus/          # Documentos del corpus (~10GB)
     │   └── *.json (archivos de documentos, previamente TXT)
     └── index/           # Índice pre-construido
