@@ -87,7 +87,7 @@ python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
 
 El corpus y el índice pre-construido están disponibles en Google Drive:
 
-🔗 **[Descargar datos desde Google Drive](https://drive.google.com/drive/folders/1EDmw6QCi_2zTBF6jwhnnzEr6M3V3mkS1?usp=drive_link)**
+🔗 **[Descargar datos desde Google Drive](https://drive.google.com/drive/folders/1EDmw6QCi_2zTBF6jwhnnzEr6M3V3mkS1?usp=sharing)**
 
 Descarga y extrae los archivos en la carpeta `backend/data/`:
 
