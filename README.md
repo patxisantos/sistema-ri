@@ -248,19 +248,6 @@ sistema-ri/
 └── README.md
 ```
 
-## Métricas de Evaluación
-
-El sistema incluye evaluación automática con las siguientes métricas:
-
-| Métrica | Valor | Descripción |
-|---------|-------|-------------|
-| MAP | 12.31% | Mean Average Precision |
-| MRR | 21.00% | Mean Reciprocal Rank |
-| P@5 | 8.0% | Precision at 5 |
-| P@10 | 8.0% | Precision at 10 |
-| R@10 | 16.0% | Recall at 10 |
-| R@20 | 24.0% | Recall at 20 |
-
 ## Tecnologías Utilizadas
 
 - **Backend**: Python, FastAPI, NLTK, Pickle
